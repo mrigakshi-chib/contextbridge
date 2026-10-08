@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ObservationSource {
+  THERAPIST
+  PARENT
+  TEACHER
+}
+
+enum Environment {
+  CLINIC
+  HOME
+  SCHOOL
+  COMMUNITY
+}
+
+enum Partner {
+  THERAPIST
+  MOTHER
+  FATHER
+  TEACHER
+  PEER
+  OTHER
+}
+
+enum Activity {
+  THERAPY_SESSION
+  MEALTIME
+  STRUCTURED_PLAY
+  FREE_PLAY
+  CLASSROOM
+  PEER_INTERACTION
+  DAILY_ROUTINE
+  OTHER
+}
+
+enum PromptLevel {
+  NONE
+  GESTURAL
+  VISUAL
+  VERBAL
+  PARTIAL
+  FULL
+}
+
+model Child {
+  id          String   @id @default(cuid())
+  firstName   String
+  dateOfBirth DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  goals       Goal[]
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  childId     String
+  title       String
+  description String?
+  skillArea   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  child        Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+  observations Observation[]
+}
+
+model Observation {
+  id                   String            @id @default(cuid())
+  goalId               String
+  observedAt           DateTime
+  source               ObservationSource
+  environment          Environment
+  partner              Partner
+  activity             Activity
+  promptLevel          PromptLevel
+  attempts             Int
+  successes            Int
+  independentSuccesses Int
+  notes                String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  goal                  Goal              @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+  @@index([observedAt])
+  @@index([environment])
+}
