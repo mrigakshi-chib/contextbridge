@@ -1,6 +1,16 @@
 "use server";
 
 import { GoogleGenAI } from "@google/genai";
+import {
+  Activity,
+  Environment,
+  ObservationSource,
+  Partner,
+  PromptLevel,
+} from "@prisma/client";
+import { redirect } from "next/navigation";
+
+import { prisma } from "@/lib/prisma";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -50,6 +60,33 @@ export type ExtractedObservation = {
   successes: number;
   independentSuccesses: number;
 
+  summary: string;
+};
+
+export type ConfirmedObservation = {
+  environment: Exclude<
+    ExtractedObservation["environment"],
+    "UNKNOWN"
+  >;
+
+  partner: Exclude<
+    ExtractedObservation["partner"],
+    "UNKNOWN"
+  >;
+
+  activity: Exclude<
+    ExtractedObservation["activity"],
+    "UNKNOWN"
+  >;
+
+  promptLevel: Exclude<
+    ExtractedObservation["promptLevel"],
+    "UNKNOWN"
+  >;
+
+  attempts: number;
+  successes: number;
+  independentSuccesses: number;
   summary: string;
 };
 
@@ -203,23 +240,6 @@ Output:
   "summary": "Aarav independently requested juice twice during breakfast."
 }
 
-Input:
-"At school he needed help to ask for water three times."
-
-Output:
-{
-  "needsClarification": false,
-  "clarificationQuestion": null,
-  "environment": "SCHOOL",
-  "partner": "UNKNOWN",
-  "activity": "OTHER",
-  "promptLevel": "UNKNOWN",
-  "attempts": 3,
-  "successes": 3,
-  "independentSuccesses": 0,
-  "summary": "Aarav requested water three times at school with assistance."
-}
-
 Caregiver note:
 
 "${note}"
@@ -256,7 +276,13 @@ Return exactly this JSON structure:
     .replace(/```$/i, "")
     .trim();
 
-  const parsed = JSON.parse(cleaned);
+  const parsed = JSON.parse(
+    cleaned
+  ) as ExtractedObservation;
+
+  if (parsed.successes > parsed.attempts) {
+    parsed.successes = parsed.attempts;
+  }
 
   if (
     parsed.independentSuccesses >
@@ -266,9 +292,71 @@ Return exactly this JSON structure:
       parsed.successes;
   }
 
-  if (parsed.successes > parsed.attempts) {
-    parsed.successes = parsed.attempts;
+  return parsed;
+}
+
+export async function saveCaregiverObservation(
+  observation: ConfirmedObservation,
+  originalNote: string
+) {
+  if (
+    observation.attempts < 1 ||
+    observation.successes < 0 ||
+    observation.independentSuccesses < 0 ||
+    observation.successes > observation.attempts ||
+    observation.independentSuccesses >
+      observation.successes
+  ) {
+    throw new Error(
+      "Please review the attempt and success counts."
+    );
   }
 
-  return parsed as ExtractedObservation;
+  const goal = await prisma.goal.findFirst({
+    where: {
+      isActive: true,
+    },
+  });
+
+  if (!goal) {
+    throw new Error(
+      "No active developmental goal found."
+    );
+  }
+
+  await prisma.observation.create({
+    data: {
+      goalId: goal.id,
+      observedAt: new Date(),
+
+      source: ObservationSource.PARENT,
+
+      environment:
+        observation.environment as Environment,
+
+      partner:
+        observation.partner as Partner,
+
+      activity:
+        observation.activity as Activity,
+
+      promptLevel:
+        observation.promptLevel as PromptLevel,
+
+      attempts: observation.attempts,
+      successes: observation.successes,
+
+      independentSuccesses:
+        observation.independentSuccesses,
+
+      notes: [
+        observation.summary,
+        `Caregiver note: ${originalNote}`,
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    },
+  });
+
+  redirect("/");
 }
