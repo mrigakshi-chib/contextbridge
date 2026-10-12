@@ -458,7 +458,7 @@ The system:
 
 ### Deployment
 
-- Vercel
+- Railway
 
 ---
 
