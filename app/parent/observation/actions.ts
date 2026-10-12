@@ -1,6 +1,7 @@
 "use server";
 
 import { GoogleGenAI } from "@google/genai";
+
 import {
   Activity,
   Environment,
@@ -8,6 +9,7 @@ import {
   Partner,
   PromptLevel,
 } from "@prisma/client";
+
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
@@ -87,10 +89,13 @@ export type ConfirmedObservation = {
   attempts: number;
   successes: number;
   independentSuccesses: number;
+
   summary: string;
 };
 
-async function generateWithRetry(prompt: string) {
+async function generateWithRetry(
+  prompt: string
+) {
   try {
     return await ai.models.generateContent({
       model: "gemini-3.6-flash",
@@ -104,7 +109,9 @@ async function generateWithRetry(prompt: string) {
 
     const isQuotaExceeded =
       message.includes("429") ||
-      message.includes("RESOURCE_EXHAUSTED");
+      message.includes(
+        "RESOURCE_EXHAUSTED"
+      );
 
     const isTemporaryUnavailable =
       message.includes("503") ||
@@ -139,7 +146,9 @@ export async function extractObservation(
   note: string
 ): Promise<ExtractedObservation> {
   if (!note.trim()) {
-    throw new Error("Observation note is required.");
+    throw new Error(
+      "Observation note is required."
+    );
   }
 
   const prompt = `
@@ -240,6 +249,23 @@ Output:
   "summary": "Aarav independently requested juice twice during breakfast."
 }
 
+Input:
+"At school he needed help to ask for water three times."
+
+Output:
+{
+  "needsClarification": false,
+  "clarificationQuestion": null,
+  "environment": "SCHOOL",
+  "partner": "UNKNOWN",
+  "activity": "OTHER",
+  "promptLevel": "UNKNOWN",
+  "attempts": 3,
+  "successes": 3,
+  "independentSuccesses": 0,
+  "summary": "Aarav requested water three times at school with assistance."
+}
+
 Caregiver note:
 
 "${note}"
@@ -260,9 +286,11 @@ Return exactly this JSON structure:
 }
 `;
 
-  const response = await generateWithRetry(prompt);
+  const response =
+    await generateWithRetry(prompt);
 
-  const text = response.text?.trim();
+  const text =
+    response.text?.trim();
 
   if (!text) {
     throw new Error(
@@ -280,8 +308,11 @@ Return exactly this JSON structure:
     cleaned
   ) as ExtractedObservation;
 
-  if (parsed.successes > parsed.attempts) {
-    parsed.successes = parsed.attempts;
+  if (
+    parsed.successes > parsed.attempts
+  ) {
+    parsed.successes =
+      parsed.attempts;
   }
 
   if (
@@ -297,13 +328,62 @@ Return exactly this JSON structure:
 
 export async function saveCaregiverObservation(
   observation: ConfirmedObservation,
-  originalNote: string
+  originalNote: string,
+  observedAtInput: string
 ) {
+  if (!observedAtInput) {
+    throw new Error(
+      "Observation date is required."
+    );
+  }
+
+  const observedAt = new Date(
+    `${observedAtInput}T12:00:00.000Z`
+  );
+
   if (
+    Number.isNaN(observedAt.getTime())
+  ) {
+    throw new Error(
+      "Observation date is invalid."
+    );
+  }
+
+  const tomorrow = new Date();
+
+  tomorrow.setUTCDate(
+    tomorrow.getUTCDate() + 1
+  );
+
+  tomorrow.setUTCHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  if (observedAt >= tomorrow) {
+    throw new Error(
+      "Observation date cannot be in the future."
+    );
+  }
+
+  if (
+    !Number.isFinite(
+      observation.attempts
+    ) ||
+    !Number.isFinite(
+      observation.successes
+    ) ||
+    !Number.isFinite(
+      observation.independentSuccesses
+    ) ||
     observation.attempts < 1 ||
     observation.successes < 0 ||
-    observation.independentSuccesses < 0 ||
-    observation.successes > observation.attempts ||
+    observation.independentSuccesses <
+      0 ||
+    observation.successes >
+      observation.attempts ||
     observation.independentSuccesses >
       observation.successes
   ) {
@@ -312,11 +392,12 @@ export async function saveCaregiverObservation(
     );
   }
 
-  const goal = await prisma.goal.findFirst({
-    where: {
-      isActive: true,
-    },
-  });
+  const goal =
+    await prisma.goal.findFirst({
+      where: {
+        isActive: true,
+      },
+    });
 
   if (!goal) {
     throw new Error(
@@ -327,9 +408,11 @@ export async function saveCaregiverObservation(
   await prisma.observation.create({
     data: {
       goalId: goal.id,
-      observedAt: new Date(),
 
-      source: ObservationSource.PARENT,
+      observedAt,
+
+      source:
+        ObservationSource.PARENT,
 
       environment:
         observation.environment as Environment,
@@ -343,8 +426,11 @@ export async function saveCaregiverObservation(
       promptLevel:
         observation.promptLevel as PromptLevel,
 
-      attempts: observation.attempts,
-      successes: observation.successes,
+      attempts:
+        observation.attempts,
+
+      successes:
+        observation.successes,
 
       independentSuccesses:
         observation.independentSuccesses,

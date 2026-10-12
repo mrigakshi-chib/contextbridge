@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 import { createObservation } from "./actions";
+import ObservationDateField from "./ObservationDateField";
 
 export default function NewObservationPage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-3xl px-6 py-10">
-
         <div className="mb-8">
           <Link
             href="/"
@@ -33,8 +33,9 @@ export default function NewObservationPage() {
           action={createObservation}
           className="space-y-6 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm"
         >
-          <div className="grid gap-6 md:grid-cols-2">
+          <ObservationDateField />
 
+          <div className="grid gap-6 md:grid-cols-2">
             <FormSelect
               label="Environment"
               name="environment"
@@ -86,11 +87,9 @@ export default function NewObservationPage() {
                 ["FULL", "Full"],
               ]}
             />
-
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
-
             <NumberField
               label="Attempts"
               name="attempts"
@@ -105,7 +104,6 @@ export default function NewObservationPage() {
               label="Independent responses"
               name="independentSuccesses"
             />
-
           </div>
 
           <div>
@@ -132,7 +130,6 @@ export default function NewObservationPage() {
           </div>
 
           <div className="flex items-center justify-end gap-3">
-
             <Link
               href="/"
               className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
@@ -146,10 +143,8 @@ export default function NewObservationPage() {
             >
               Save observation
             </button>
-
           </div>
         </form>
-
       </div>
     </main>
   );
@@ -179,9 +174,12 @@ function FormSelect({
         required
         className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
       >
-        {options.map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
+        {options.map(([value, optionLabel]) => (
+          <option
+            key={value}
+            value={value}
+          >
+            {optionLabel}
           </option>
         ))}
       </select>

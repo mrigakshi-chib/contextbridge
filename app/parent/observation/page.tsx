@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   ConfirmedObservation,
@@ -14,20 +17,53 @@ export default function ParentObservationPage() {
   const [note, setNote] = useState("");
 
   const [result, setResult] =
-    useState<ExtractedObservation | null>(null);
+    useState<ExtractedObservation | null>(
+      null
+    );
 
   const [editable, setEditable] =
-    useState<ExtractedObservation | null>(null);
+    useState<ExtractedObservation | null>(
+      null
+    );
 
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [observationDate, setObservationDate] =
+    useState("");
+
+  const [today, setToday] = useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [saving, setSaving] =
+    useState(false);
 
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const now = new Date();
+
+    const localDate = new Date(
+      now.getTime() -
+        now.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .slice(0, 10);
+
+    setToday(localDate);
+    setObservationDate(localDate);
+  }, []);
 
   async function handleExtract() {
     if (!note.trim()) {
       setError(
         "Please describe what you noticed."
+      );
+      return;
+    }
+
+    if (!observationDate) {
+      setError(
+        "Please select when the observation happened."
       );
       return;
     }
@@ -74,6 +110,13 @@ export default function ParentObservationPage() {
       return;
     }
 
+    if (!observationDate) {
+      setError(
+        "Please select when the observation happened."
+      );
+      return;
+    }
+
     if (
       editable.environment === "UNKNOWN" ||
       editable.partner === "UNKNOWN" ||
@@ -110,13 +153,20 @@ export default function ParentObservationPage() {
 
     try {
       const confirmed: ConfirmedObservation = {
-        environment: editable.environment,
+        environment:
+          editable.environment,
+
         partner: editable.partner,
+
         activity: editable.activity,
-        promptLevel: editable.promptLevel,
+
+        promptLevel:
+          editable.promptLevel,
 
         attempts: editable.attempts,
-        successes: editable.successes,
+
+        successes:
+          editable.successes,
 
         independentSuccesses:
           editable.independentSuccesses,
@@ -126,14 +176,30 @@ export default function ParentObservationPage() {
 
       await saveCaregiverObservation(
         confirmed,
-        note
+        note,
+        observationDate
       );
     } catch (error) {
       console.error(error);
 
-      setError(
-        "We couldn't save the observation. Please review the fields and try again."
-      );
+      const message =
+        error instanceof Error
+          ? error.message
+          : "";
+
+      if (
+        message.includes(
+          "future"
+        )
+      ) {
+        setError(
+          "Observation date cannot be in the future."
+        );
+      } else {
+        setError(
+          "We couldn't save the observation. Please review the fields and try again."
+        );
+      }
 
       setSaving(false);
     }
@@ -185,23 +251,55 @@ export default function ParentObservationPage() {
         </div>
 
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
-          <label
-            htmlFor="note"
-            className="text-sm font-medium text-slate-700"
-          >
-            What happened today?
-          </label>
+          <div>
+            <label
+              htmlFor="observationDate"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Observation date
+            </label>
 
-          <textarea
-            id="note"
-            value={note}
-            onChange={(event) =>
-              setNote(event.target.value)
-            }
-            rows={7}
-            placeholder='Example: Aarav asked me "want juice" twice by himself during breakfast.'
-            className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm leading-6 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-          />
+            <input
+              id="observationDate"
+              type="date"
+              value={observationDate}
+              max={today}
+              onChange={(event) =>
+                setObservationDate(
+                  event.target.value
+                )
+              }
+              required
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100 md:max-w-sm"
+            />
+
+            <p className="mt-2 text-xs leading-5 text-slate-400">
+              Select today or an earlier date if
+              you are recording something you
+              noticed previously. Future dates are
+              not allowed.
+            </p>
+          </div>
+
+          <div className="mt-6">
+            <label
+              htmlFor="note"
+              className="text-sm font-medium text-slate-700"
+            >
+              What happened?
+            </label>
+
+            <textarea
+              id="note"
+              value={note}
+              onChange={(event) =>
+                setNote(event.target.value)
+              }
+              rows={7}
+              placeholder='Example: Aarav asked me "want juice" twice by himself during breakfast.'
+              className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm leading-6 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+            />
+          </div>
 
           {error && (
             <p className="mt-3 text-sm text-red-600">
@@ -277,16 +375,34 @@ export default function ParentObservationPage() {
                 information will be saved.
               </p>
 
+              <div className="mt-5 rounded-xl bg-slate-50 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Observed on
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-slate-800">
+                  {observationDate}
+                </p>
+              </div>
+
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <EditableSelect
                   label="Environment"
-                  value={editable.environment}
+                  value={
+                    editable.environment
+                  }
                   options={[
-                    ["UNKNOWN", "Select environment"],
+                    [
+                      "UNKNOWN",
+                      "Select environment",
+                    ],
                     ["HOME", "Home"],
                     ["SCHOOL", "School"],
                     ["CLINIC", "Clinic"],
-                    ["COMMUNITY", "Community"],
+                    [
+                      "COMMUNITY",
+                      "Community",
+                    ],
                   ]}
                   onChange={(value) =>
                     updateField(
@@ -300,10 +416,16 @@ export default function ParentObservationPage() {
                   label="Partner"
                   value={editable.partner}
                   options={[
-                    ["UNKNOWN", "Select partner"],
+                    [
+                      "UNKNOWN",
+                      "Select partner",
+                    ],
                     ["MOTHER", "Mother"],
                     ["FATHER", "Father"],
-                    ["THERAPIST", "Therapist"],
+                    [
+                      "THERAPIST",
+                      "Therapist",
+                    ],
                     ["TEACHER", "Teacher"],
                     ["PEER", "Peer"],
                     ["OTHER", "Other"],
@@ -320,14 +442,26 @@ export default function ParentObservationPage() {
                   label="Activity"
                   value={editable.activity}
                   options={[
-                    ["UNKNOWN", "Select activity"],
-                    ["MEALTIME", "Mealtime"],
+                    [
+                      "UNKNOWN",
+                      "Select activity",
+                    ],
+                    [
+                      "MEALTIME",
+                      "Mealtime",
+                    ],
                     [
                       "STRUCTURED_PLAY",
                       "Structured play",
                     ],
-                    ["FREE_PLAY", "Free play"],
-                    ["CLASSROOM", "Classroom"],
+                    [
+                      "FREE_PLAY",
+                      "Free play",
+                    ],
+                    [
+                      "CLASSROOM",
+                      "Classroom",
+                    ],
                     [
                       "PEER_INTERACTION",
                       "Peer interaction",
@@ -352,11 +486,19 @@ export default function ParentObservationPage() {
 
                 <EditableSelect
                   label="Prompt level"
-                  value={editable.promptLevel}
+                  value={
+                    editable.promptLevel
+                  }
                   options={[
-                    ["UNKNOWN", "Select prompt level"],
+                    [
+                      "UNKNOWN",
+                      "Select prompt level",
+                    ],
                     ["NONE", "None"],
-                    ["GESTURAL", "Gestural"],
+                    [
+                      "GESTURAL",
+                      "Gestural",
+                    ],
                     ["VISUAL", "Visual"],
                     ["VERBAL", "Verbal"],
                     ["PARTIAL", "Partial"],
@@ -430,8 +572,8 @@ export default function ParentObservationPage() {
 
               <div className="mt-5 rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
                 AI extraction may be imperfect.
-                Review and correct the fields before
-                saving.
+                Review and correct the fields
+                before saving.
               </div>
 
               {error && (
@@ -483,14 +625,16 @@ function EditableSelect({
         }
         className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
       >
-        {options.map(([optionValue, label]) => (
-          <option
-            key={optionValue}
-            value={optionValue}
-          >
-            {label}
-          </option>
-        ))}
+        {options.map(
+          ([optionValue, optionLabel]) => (
+            <option
+              key={optionValue}
+              value={optionValue}
+            >
+              {optionLabel}
+            </option>
+          )
+        )}
       </select>
     </div>
   );
