@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import ProgressTrendChart from "@/app/components/ProgressTrendChart";
 import { prisma } from "@/lib/prisma";
 
 import {
@@ -79,19 +80,24 @@ async function Dashboard() {
       MIN_OBSERVATIONS_FOR_TREND
   );
 
-  const firstReliableWeek = reliableWeeks[0];
+  const firstReliableWeek =
+    reliableWeeks[0];
 
   const latestReliableWeek =
-    reliableWeeks[reliableWeeks.length - 1];
+    reliableWeeks[
+      reliableWeeks.length - 1
+    ];
 
   const independenceImprovement =
-    firstReliableWeek && latestReliableWeek
+    firstReliableWeek &&
+    latestReliableWeek
       ? latestReliableWeek.independentSuccessRate -
         firstReliableWeek.independentSuccessRate
       : 0;
 
   const promptDependencyChange =
-    firstReliableWeek && latestReliableWeek
+    firstReliableWeek &&
+    latestReliableWeek
       ? latestReliableWeek.promptDependencyRate -
         firstReliableWeek.promptDependencyRate
       : 0;
@@ -109,7 +115,8 @@ async function Dashboard() {
   const peerPerformance =
     byActivity.find(
       (item) =>
-        item.name === "PEER_INTERACTION"
+        item.name ===
+        "PEER_INTERACTION"
     );
 
   return (
@@ -127,7 +134,8 @@ async function Dashboard() {
             </h1>
 
             <p className="mt-2 text-slate-500">
-              Cross-context developmental intelligence
+              Cross-context developmental
+              intelligence
             </p>
           </div>
 
@@ -213,7 +221,8 @@ async function Dashboard() {
 
               <div>
                 <p className="font-semibold text-amber-950">
-                  Generalization gap detected
+                  Generalization gap
+                  detected
                 </p>
 
                 <p className="mt-2 max-w-4xl text-sm leading-6 text-amber-900">
@@ -233,7 +242,10 @@ async function Dashboard() {
                   }
                   %, but falls to{" "}
                   <strong>
-                    {generalizationGap.weakestRate}%
+                    {
+                      generalizationGap.weakestRate
+                    }
+                    %
                   </strong>{" "}
                   in{" "}
                   <strong>
@@ -243,9 +255,10 @@ async function Dashboard() {
                         )
                       : ""}
                   </strong>
-                  . This suggests that progress may
-                  not yet be transferring
-                  consistently across environments.
+                  . This suggests that
+                  progress may not yet be
+                  transferring consistently
+                  across environments.
                 </p>
               </div>
             </div>
@@ -259,13 +272,15 @@ async function Dashboard() {
             </p>
 
             <h2 className="mt-2 text-xl font-semibold">
-              Skill acquisition vs real-world generalization
+              Skill acquisition vs
+              real-world generalization
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Progress in learning the skill is not
-              the same as using it independently
-              across everyday contexts.
+              Progress in learning the
+              skill is not the same as
+              using it independently across
+              everyday contexts.
             </p>
           </div>
 
@@ -282,8 +297,8 @@ async function Dashboard() {
                   </p>
 
                   <p className="mt-2 text-sm leading-6 text-emerald-900">
-                    Independent success increased
-                    from{" "}
+                    Independent success
+                    increased from{" "}
                     <strong>
                       {firstReliableWeek
                         ?.independentSuccessRate ??
@@ -297,13 +312,14 @@ async function Dashboard() {
                         0}
                       %
                     </strong>{" "}
-                    across sufficiently observed
-                    weeks.
+                    across sufficiently
+                    observed weeks.
                   </p>
                 </div>
 
                 <div className="w-fit rounded-full bg-white px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm">
-                  {independenceImprovement >= 0
+                  {independenceImprovement >=
+                  0
                     ? "+"
                     : ""}
                   {independenceImprovement} pts
@@ -330,7 +346,10 @@ async function Dashboard() {
                     <p className="mt-2 text-sm leading-6 text-amber-900">
                       A{" "}
                       <strong>
-                        {generalizationGap.gap}-point
+                        {
+                          generalizationGap.gap
+                        }
+                        -point
                       </strong>{" "}
                       gap remains between{" "}
                       <strong>
@@ -348,7 +367,8 @@ async function Dashboard() {
                       {peerPerformance && (
                         <>
                           {" "}
-                          Peer interaction is currently{" "}
+                          Peer interaction is
+                          currently{" "}
                           <strong>
                             {
                               peerPerformance.independentSuccessRate
@@ -362,8 +382,8 @@ async function Dashboard() {
                   ) : (
                     <p className="mt-2 text-sm leading-6 text-amber-900">
                       More repeated observations
-                      across environments are needed
-                      before interpreting
+                      across environments are
+                      needed before interpreting
                       cross-context differences.
                     </p>
                   )}
@@ -371,7 +391,8 @@ async function Dashboard() {
 
                 {generalizationGap?.hasEnoughEvidence && (
                   <div className="w-fit rounded-full bg-white px-4 py-2 text-sm font-semibold text-amber-800 shadow-sm">
-                    {generalizationGap.gap} pt gap
+                    {generalizationGap.gap} pt
+                    gap
                   </div>
                 )}
               </div>
@@ -380,11 +401,13 @@ async function Dashboard() {
 
           <div className="mt-5 rounded-xl bg-slate-50 p-4">
             <p className="text-sm leading-6 text-slate-700">
-              <strong>Interpretation:</strong>{" "}
-              The skill is being acquired, but
-              independence is not yet transferring
-              consistently across everyday
-              contexts.
+              <strong>
+                Interpretation:
+              </strong>{" "}
+              The skill is being acquired,
+              but independence is not yet
+              transferring consistently
+              across everyday contexts.
             </p>
           </div>
         </section>
@@ -400,8 +423,9 @@ async function Dashboard() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Patterns derived from longitudinal
-              observations across contexts.
+              Patterns derived from
+              longitudinal observations
+              across contexts.
             </p>
           </div>
 
@@ -469,15 +493,18 @@ async function Dashboard() {
             </p>
 
             <p className="mt-2 max-w-5xl text-sm leading-6 text-slate-600">
-              Aarav shows strong improvement in
-              structured settings, especially
-              clinic-based activities and familiar
-              home routines. However, performance
-              remains substantially lower in school
-              and peer interaction contexts. This
-              suggests that skill acquisition is
-              progressing faster than real-world
-              generalization.
+              Aarav shows strong
+              improvement in structured
+              settings, especially
+              clinic-based activities and
+              familiar home routines.
+              However, performance remains
+              substantially lower in school
+              and peer interaction
+              contexts. This suggests that
+              skill acquisition is
+              progressing faster than
+              real-world generalization.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2 text-xs">
@@ -546,6 +573,24 @@ async function Dashboard() {
             </p>
           </div>
 
+          <div className="mb-8 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+            <ProgressTrendChart
+              data={reliableWeeks}
+            />
+
+            <p className="mt-2 text-center text-xs leading-5 text-slate-400">
+              Trend lines include only weeks
+              with at least{" "}
+              {
+                MIN_OBSERVATIONS_FOR_TREND
+              }{" "}
+              observations. Early data
+              remains visible below but is
+              not used for longitudinal
+              conclusions.
+            </p>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-3">
             {weeklyTrend.map((week) => (
               <div
@@ -561,13 +606,16 @@ async function Dashboard() {
                   <p className="mt-1 text-xs font-medium text-amber-700">
                     Early data ·{" "}
                     {week.observationCount}{" "}
-                    {week.observationCount === 1
+                    {week.observationCount ===
+                    1
                       ? "observation"
                       : "observations"}
                   </p>
                 ) : (
                   <p className="mt-1 text-xs text-slate-400">
-                    {week.observationCount}{" "}
+                    {
+                      week.observationCount
+                    }{" "}
                     observations
                   </p>
                 )}
@@ -632,7 +680,8 @@ async function Dashboard() {
 
                 <p className="mt-2 text-xs text-slate-400">
                   {item.observationCount}{" "}
-                  {item.observationCount === 1
+                  {item.observationCount ===
+                  1
                     ? "observation"
                     : "observations"}
                 </p>
@@ -642,10 +691,10 @@ async function Dashboard() {
         </section>
 
         <footer className="mt-8 text-xs leading-5 text-slate-400">
-          Prototype using synthetic data only.
-          ContextBridge does not diagnose
-          developmental conditions or make
-          treatment decisions.
+          Prototype using synthetic data
+          only. ContextBridge does not
+          diagnose developmental conditions
+          or make treatment decisions.
         </footer>
       </div>
     </main>
@@ -733,12 +782,17 @@ function PerformanceCard({
             <div className="mb-2 flex justify-between gap-4 text-sm">
               <div>
                 <span className="font-medium">
-                  {formatLabel(item.name)}
+                  {formatLabel(
+                    item.name
+                  )}
                 </span>
 
                 <p className="mt-0.5 text-xs text-slate-400">
-                  {item.observationCount}{" "}
-                  {item.observationCount === 1
+                  {
+                    item.observationCount
+                  }{" "}
+                  {item.observationCount ===
+                  1
                     ? "observation"
                     : "observations"}
                 </p>
@@ -781,7 +835,8 @@ function DashboardLoading() {
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-6 py-10">
         <p className="text-sm text-slate-500">
-          Loading developmental insights...
+          Loading developmental
+          insights...
         </p>
       </div>
     </main>
