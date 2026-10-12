@@ -19,8 +19,8 @@ ContextBridge adds a second question:
 ## Live Demo
 
 **Live app:** https://contextbridge-production-abe0.up.railway.app/ 
-**GitHub:** `https://github.com/mrigakshi-chib`  
-**Demo video:** Coming soon
+**GitHub:** `https://github.com/mrigakshi-chib/contextbridge`  
+
 
 ---
 
@@ -907,20 +907,6 @@ This prototype explores that product direction and does not claim knowledge of p
 
 ---
 
-## Screenshots
-
-Screenshots will be added after final deployment.
-
-Recommended screenshots:
-
-1. Dashboard overview
-2. Generalization gap
-3. Skill acquisition vs generalization
-4. Progress chart
-5. Caregiver input
-6. AI review screen
-
----
 
 ## Author
 
