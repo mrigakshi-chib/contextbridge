@@ -680,72 +680,110 @@ npx tsx scripts/check-analytics.ts
 
 # Deployment
 
-The project is designed to deploy on Vercel.
+ContextBridge is deployed on **Railway**, with **Neon PostgreSQL** for database persistence and **Google Gemini** for AI-assisted caregiver note extraction.
+
+**Live Application:** https://contextbridge-production-abe0.up.railway.app/
 
 ## 1. Push the project to GitHub
 
 ```bash
 git add .
 git commit -m "Prepare ContextBridge for deployment"
-git push
+git push origin main
 ```
 
-## 2. Import the repository into Vercel
+## 2. Deploy using Railway
 
-Sign in to Vercel with GitHub and import the ContextBridge repository.
+1. Sign in to [Railway](https://railway.com/).
+2. Create a new project.
+3. Select **Deploy from GitHub Repo**.
+4. Connect and select the `contextbridge` repository.
+5. Configure the application as a Next.js service.
 
-Vercel should automatically detect Next.js.
+Railway builds and runs the application using the project configuration.
 
-## 3. Add environment variables
+## 3. Configure environment variables
 
-Add:
+Add the following variables in the Railway service settings:
 
-```text
-DATABASE_URL
-GEMINI_API_KEY
+```env
+DATABASE_URL=YOUR_POSTGRESQL_CONNECTION_STRING
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 ```
 
-Use the same values as your local environment.
+- `DATABASE_URL` connects the application to Neon PostgreSQL through Prisma.
+- `GEMINI_API_KEY` enables AI-assisted caregiver observation extraction.
 
-Do not upload `.env`.
+Keep credentials in Railway's environment-variable settings. Never commit secrets or the local `.env` file to GitHub.
 
-## 4. Deploy
+## 4. Apply database migrations
 
-Use the default build command:
+Ensure Prisma migrations are applied to the production PostgreSQL database:
+
+```bash
+npx prisma migrate deploy
+```
+
+Generate the Prisma client as part of the application's build process:
+
+```bash
+npx prisma generate
+```
+
+## 5. Build and deploy
+
+Build the Next.js application:
 
 ```bash
 npm run build
 ```
 
-## 5. Verify production
+Railway runs the deployed service using the project's configured start command.
 
-Check:
+The application is accessible at:
 
-```text
-/
-```
+**https://contextbridge-production-abe0.up.railway.app/**
 
-```text
-/observations/new
-```
+## 6. Verify the production deployment
 
-```text
-/parent/observation
-```
+Verify the following routes:
+
+- `/` — Therapist dashboard
+- `/observations/new` — Structured therapist observation
+- `/parent/observation` — AI-assisted caregiver observation
 
 Confirm that:
 
-- database data loads
-- chart renders
-- therapist observations save
-- caregiver extraction works
-- confirmed caregiver observations save
-- dates work
-- future dates are blocked
-- dashboard metrics recalculate
-- no runtime errors appear
+- PostgreSQL data loads correctly.
+- Progress charts render.
+- Therapist observations are saved.
+- Gemini extracts structured information from caregiver notes.
+- Caregivers can review and confirm extracted observations.
+- Date validation prevents future observations.
+- Dashboard analytics recalculate after new observations.
+- The application runs without unexpected runtime errors.
 
----
+## Deployment Architecture
+
+```text
+GitHub Repository
+       |
+       v
+Railway (Next.js Application)
+       |
+       +---- Prisma ORM ---- Neon PostgreSQL
+       |
+       +---- Gemini API ---- AI Note Extraction
+       |
+       v
+Deployed ContextBridge Application
+```
+
+**Deployment Platform:** Railway  
+**Database:** Neon PostgreSQL  
+**ORM:** Prisma  
+**AI Integration:** Google Gemini  
+**Application Framework:** Next.js + TypeScript
 
 ## Important engineering decisions
 
